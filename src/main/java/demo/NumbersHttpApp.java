@@ -17,16 +17,16 @@ import scala.concurrent.duration.FiniteDuration;
 
 import java.util.concurrent.TimeUnit;
 
-public class PerpetualResponseHttpApp extends AllDirectives {
+public class NumbersHttpApp extends AllDirectives {
 
-  public static void main(String[] params) {
-    new PerpetualResponseHttpApp().run();
+  public static void main(String[] params) throws InterruptedException {
+    new NumbersHttpApp().run();
   }
 
-  void run() {
+  void run() throws InterruptedException {
     Source<ByteString, NotUsed> stream = Source.range(0, 1000000)
-            .throttle(5, new FiniteDuration(1, TimeUnit.SECONDS), 5, ThrottleMode.shaping())
-            .map(i -> ByteString.fromString(i.toString() + "\n"));
+      .throttle(5, new FiniteDuration(1, TimeUnit.SECONDS), 5, ThrottleMode.shaping())
+      .map(i -> ByteString.fromString(i.toString() + "\n"));
 
     ActorSystem system = ActorSystem.create("server");
     Materializer materializer = ActorMaterializer.create(system);
@@ -42,5 +42,7 @@ public class PerpetualResponseHttpApp extends AllDirectives {
     http.bindAndHandle(route.flow(system, materializer),
             ConnectHttp.toHost("localhost", 8080),
             materializer);
+
+    Thread.sleep(10000);
   }
 }

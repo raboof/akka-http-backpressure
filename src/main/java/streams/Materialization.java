@@ -4,6 +4,7 @@ import akka.Done;
 import akka.NotUsed;
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.japi.Pair;
 import akka.stream.ActorMaterializer;
 import akka.stream.Materializer;
 import akka.stream.OverflowStrategy;
@@ -29,8 +30,9 @@ public class Materialization {
     //#source
     Source<String, ActorRef> source =
       Source.actorRef(23, OverflowStrategy.dropNew());
-    Sink<String, CompletionStage<Done>> sink =
-      Sink.ignore();
+
+    Sink<String, CompletionStage<String>> sink =
+      Sink.reduce((l, r) -> l + r);
 
     ActorRef actor = source.to(sink).run(materializer);
     actor.tell("Message", ActorRef.noSender());
@@ -39,15 +41,20 @@ public class Materialization {
 
   void sink() {
     //#sink
-    Source<String, NotUsed> source =
-      Source.range(0, 10).map(Object::toString);
-    Sink<String, CompletionStage<Done>> sink =
-      Sink.ignore();
+    Source<String, ActorRef> source =
+      Source.actorRef(23, OverflowStrategy.dropNew());
 
-    RunnableGraph<NotUsed> graph1 =
+    Sink<String, CompletionStage<String>> sink =
+      Sink.reduce((l, r) -> l + r);
+
+    RunnableGraph<ActorRef> graph1 =
       source.to(sink);
-    RunnableGraph<CompletionStage<Done>> graph2 =
+
+    RunnableGraph<CompletionStage<String>> graph2 =
       source.toMat(sink, Keep.right());
+
+    RunnableGraph<Pair<ActorRef, CompletionStage<String>>> graph3 =
+      source.toMat(sink, Keep.both());
     //#sink
 
     //#fusing

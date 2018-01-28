@@ -29,7 +29,7 @@ What to expect<br>
 
 # 1. Reactive Streams
 
-@notes[So let's start with Reactive Streams. To better understand the reactive streams initiative it makes sense to look at some history of there this effort came from]
+@notes[So let's start with Reactive Streams. To better understand the reactive streams initiative it makes sense to look at some history of there this effort came from<br>Time: 11:55]
 
 @@@
 
@@ -39,16 +39,13 @@ What to expect<br>
 
 Open Source toolkit for building Concurrent, Distributed, Resilient Message-Driven applications on the JVM
 
-@notes[Akka grew out of the realization, circa 2010, that threads are a heavyweight abstraction that is hard to make resilient. Inspired by Erlang, asynchronous model, actor model, but not covering that today.]
-
-[TODO] small example: threaded code, explain many calls = many threads, actor alternative, explain resiliency by explaining the actor is in a better position to deal with problems compared to having an exception in each thread
-
+@notes[Akka grew out of the realization, circa 2009, that threads are a heavyweight abstraction that is hard to make resilient. Inspired by Erlang, asynchronous model, actor model, but not covering that today.]
 
 @@@
 
 @@@section
 
-### Traditional synchonous model
+### Traditional synchronous model
 
 @@snip[Synchronous.java]($root$/src/main/java/rs/async/Synchronous.java){#service}
 
@@ -60,7 +57,7 @@ Open Source toolkit for building Concurrent, Distributed, Resilient Message-Driv
 
 @@@section
 
-### Asynchonous approach
+### Asynchronous approach
 
 @@snip[x]($root$/src/main/java/rs/async/Asynchronous.java){#actor}
 
@@ -70,7 +67,7 @@ Open Source toolkit for building Concurrent, Distributed, Resilient Message-Driv
 Resilience. Back a slide, highlight the sending thread no longer has to deal with the exception<br>
 Coordination also much easier when using message passing<br>
 Nothing new: smalltalk, erlang<br>
-Note: there are of course many ways to make a system asynchonous, and I'm sure many of you have introduced asynchonous boundaries on your own perhaps even with using a library. Actors are just a particularly nice way to achieve it.]
+Note: there are of course many ways to make a system asynchronous, and I'm sure many of you have introduced asynchronous boundaries on your own perhaps even with using a library. Actors are just a particularly nice way to achieve it.]
 
 @@@
 
@@ -100,7 +97,13 @@ Actor model
 
 @@snip[x]($root$/src/main/java/rs/async/Asynchronous.java){#enqueue}
 
-@notes[Akka is by no means the only approach to asynchonous programming: Node.js, RxJava for example also exploring the same space. And they all ran into the problem of message targets not being able to keep up. Not impossible to solve, but solutions (e.g. ack'ing etc) ad hoc and not composable. This lead to a number of players in industry identifying the need for an interoperable mechanism to get asynchronous, backperssured streams: the Reactive Streams initiative]
+@@@
+
+@@@section { data-background-video="fishermen.mp4" }
+
+# @span[OutOfMemoryError]{.orange .fragment}
+
+@notes[Akka is by no means the only approach to asynchronous programming: Node.js, RxJava for example also exploring the same space. And they all ran into the problem of message targets not being able to keep up. Not impossible to solve, but solutions (e.g. ack'ing etc) ad hoc and not composable. This lead to a number of players in industry identifying the need for an interoperable mechanism to get asynchronous, backperssured streams: the Reactive Streams initiative]
 
 @@@
 
@@ -110,7 +113,7 @@ Actor model
 
 ![Reactive Streams Timeline](reactive_streams_timeline.png)
 
-@notes[Industry got together under Reactive Streams umbrella (not limited to JVM)]
+@notes[Industry got together under Reactive Streams working group initiated by Viktor Klang of the Akka Team (not limited to JVM)]
 
 @@@
 
@@ -160,7 +163,7 @@ No JDK9? No problem!
 
 ### Specifications
 
-* 11-17 subtle requirements each
+* 11-17 requirements (some subtle). Each.
 * Technology Compatibility Kit (TCK)
 
 @notes[simplicity is deceptive: TCK for conformance checking. Originally planned: both user-facing API and an interoperability API. User-facing scrapped ~2014 so libraries can provide their own, ideomatic impl.]
@@ -171,15 +174,15 @@ No JDK9? No problem!
 
 # 2. Akka Streams
 
-@notes[Before we start: hands up Java/Scala experience? Will show a bit of both.]
-
-[TODO] introduce source, flows, sinks, perhaps tell async/backpressure story again
+@notes[Before we start: hands up Java/Scala experience? Will show a bit of both.<br>Time: 12:05-12:10]
 
 @@@
 
 @@@section
 
 ![Source, Flow and Sink](stream-blocks.svg)
+
+@notes[starts of our story]
 
 @@@
 
@@ -215,7 +218,11 @@ No JDK9? No problem!
 
 @@@section
 
+Java:
+
 @@snip[x]($root$/src/main/java/streams/Intro.java){#short}
+
+Scala:
 
 @@snip[x]($root$/src/main/scala/sstreams/Intro.scala){#short}
 
@@ -240,13 +247,20 @@ No JDK9? No problem!
 
 @@snip[x]($root$/src/main/java/streams/Materialization.java){#source}
 
-@@snip[x]($root$/src/main/java/streams/Materialization.java){#sink group="x fragment"}
+@note[Streams and actors go well together, default left]
 
-[TODO] use Sink.reduce as example for Sink materialization
+@@@
+
+@@@section
+
+## Materialized values
+
+@@snip[x]($root$/src/main/java/streams/Materialization.java){#sink}
 
 @note[Streams and actors go well together, default left]
 
 @@@
+
 
 @@@section
 
@@ -334,9 +348,19 @@ Can be seen in e.g. wireshark:
 
 @@@section
 
+## We've only just begun...
+
+![more complicated graphs](compose_graph.png)
+
+@notes[Only scratched the surface, many combinators to create complex graphs, custom shapes, fan in/out, materialization. Not important to show backpressure though.]
+
+@@@
+
+@@@section
+
 # 3. Akka HTTP
 
-@notes[So far: might seem lowlevel, but usable to build higher-level abstractions, i.e. Akka HTTP. Will show some of the API, highlighting how Akka streams is the foundation]
+@notes[So far: might seem lowlevel, but usable to build higher-level abstractions, i.e. Akka HTTP. Will show some of the API, highlighting how Akka streams is the foundation<br>Time: 12:20-12:35]
 
 @@@
 
@@ -367,74 +391,250 @@ Is a `Flow[Response, Request, _]`:
 
 @@@section
 
-[TODO] Simple minimal Akka HTTP application, some slides with additional features?
+## http.bindAndHandle()
 
-[TODO] Number of slides showing how the basic foundations of the Akka HTTP API is built on building blocks that should be familiar from the Akka Streams section. Both the low-level bind() and the request and response entities, tied together by the DSL.
+@@snip[x]($root$/src/main/java/http/Basics.java){#bindAndHandle}
 
-@@@
-
-@@@section
-
-# Demo
-
-[TODO] Explain the context of the demo: a HTTP API for fetching files that are stored on a back-end FTP server
+@notes[Remember materialization? This is so easy because the Flow is a blueprint that can be materialized many times]
 
 @@@
 
 @@@section
 
-# Demo
+## Routing DSL
 
-[TODO] First: fetching things from FTP. Introduce Alpakka. (Maybe move this demo to the Akka Streams section as a form of foreshadowing?)
+@@snip[x]($root$/src/main/java/http/Routing.java){#simple}
 
-@@@
-
-@@@section
-
-# Demo
-
-[TODO] Naive implementation with `Sink.reduce(_ + _)`
+@@snip[x]($root$/src/main/java/http/Routing.java){#run group="x fragment"}
 
 @@@
 
 @@@section
 
-# Demo
+## Example: numbers 
 
-[TODO] Interaction moment: who spotted the security issue?
-
-@@@
-
-@@@section
-
-# Demo
-
-[TODO] Overload it, show in VisualVM
+@notes[Wrap an Akka HTTP application around the numbers demo from the Akka Streams section]
 
 @@@
 
 @@@section
 
-# Demo
+## Path matching
 
-[TODO] Stream the entity
+@@snip[x]($root$/src/main/java/http/Routing.java){#simple}
+
+@@snip[x]($root$/src/main/java/http/PathApi.java){#pathApi1 group="x fragment"}
+@@snip[x]($root$/src/main/java/http/PathApi.java){#pathApi group="x fragment"}
 
 @@@
+
+@@@section
+
+@@snip[x]($root$/src/main/java/http/PathApi.java){#pathApi}
+
+@@snip[x]($root$/src/main/java/http/PathMatching.java){#segment}
+
+@@snip[x]($root$/src/main/java/http/PathMatching.java){#staticimports group="x fragment"}
+
+@@snip[x]($root$/src/main/java/http/PathMatching.java){#segments group="x fragment"}
+
+@@@
+
+@@@section
+
+@@snip[x]($root$/src/main/java/http/PathMatching.java){#advanced}
+
+This will match paths like `foo/bar/X42/edit` or `foo/bar/X37/create`.
+
+@notes[Possible stretch topics here: Path concatenation/Nested routes, error handling]
+
+@@@
+
+@@@section
+
+## Other Akka HTTP features
+
+Client API
+
+@span[Server-side HTTP/2]{.fragment}
+
+@span[Marshalling API]{.fragment}
+
+@span[Content negotiation]{.fragment}
+
+@@@
+
+@@@section
+
+![play](play.svg)
+
+![lagom](lagom.svg) 
+
+@notes[Conclusion: Akka and Akka Streams foundation, leveraged by Akka HTTP and other libraries]
+
+@@@
+
+@@@section
+
+# 4. Demo
+
+@notes[Time: 12:30-12:45]
+
+@@@
+
+@@@section
+
+## Challenge
+
+* HTTP front-end
+* FTP back-end
+
+@@@
+
+@@@section { data-background="alpakka.jpg" }
+
+# @span[Alpakka]{.orange}
+
+@@@
+
+@@@section
+
+## Alpakka
+
+Community for Akka Streams connectors
+
+@span[[https://github.com/akka/alpakka](https://github.com/akka/alpakka)]{.fragment}
+
+@notes[A bit like Apache Camel, but for Akka Streams]
+
+@@@
+
+@@@section
+
+![alpakka logo collection](alpakka/collection.svg)
+
+@@@
+
+@@@section
+
+## FTP client
+
+@notes[Start of live demo: fetch directory contents from FTP. (Could also move to end of Akka Streams section.)]
+
+@@@
+
+@@@section
+
+## Exposed via HTTP
+
+@notes[Naive implementation with `Sink.reduce(_ + _)`. <br>
+Interaction moment: who spotted the security issue?
+]
+
+@@@
+
+@@@section
+
+<section>
+<h2>Let's put some load on it!</h2>
+
+<img src="Gatling-logo.png">
+</section>
+
+<section>
+<img src="visualvm_overloaded.png">
+</section>
+
+<section>
+<img src="gatling_overloaded.png">
+</section>
+
+<section>
+<img src="gatling_overloaded2.png">
+</section>
+@@@
+
+@@@section
+
+## Stream the entity
+
+@@snip[x]($root$/src/main/java/demo/FtpServerHttpApp.java){#streamResponseEntity}
+
+@@@
+
+@@@section
+
+<section>
+<h2>Let's go again!</h2>
+
+<img src="Gatling-logo.png">
+</section>
+
+<section>
+<img src="visualvm_ok.png">
+<aside class="notes">Check the scale! Fairly healthy, though gc churns</aside>
+</section>
+
+<section>
+<img src="gatling_ok.png">
+</section>
+
+<section>
+<img src="gatling_ok2.png">
+</section>
+@@@
+
+
+@@@section
+
+<section>
+<h2>With room to spare</h2>
+
+<img src="visualvm_pushed.png">
+</section>
+
+<section>
+<img src="gatling_pushed.png">
+</section>
+
+<section>
+<img src="gatling_pushed2.png">
+</section>
+@@@
+
 
 @@@section
 
 # Re-cap
 
-[TODO] Backpressure protects against overloading the target of an asynchronous non-blocking stream. Reactive Streams makes this work end-to-end, use a library like Akka Streams, Akka HTTP is built on top of Akka Streams and benefits from it.
+Backpressure prevents overload
+
+@span[Reactive Streams for integration]{.fragment}
+
+@span[e.g. Akka Streams to implement]{.fragment}
+
+@span[e.g. Akka HTTP to leverage]{.fragment}
+
+@notes[Backpressure protects against overloading the target of an asynchronous non-blocking stream. Reactive Streams makes this work end-to-end, use a library like Akka Streams, Akka HTTP is built on top of Akka Streams and benefits from it.]
 
 @@@
 
 @@@section
 
-# Call to action
+## Happy hAkking!
 
-[TODO] Where to download slides, Lightbend quickstarts, where to find the community
+Slides & Code
+:  [github.com/raboof/akka-http-backpressure](https://github.com/raboof/akka-http-backpressure)
 
-@notes[And talk to me afterwards :)]
+Docs & QuickStarts
+:  [akka.io](https://akka.io), [developer.lightbend.com/start](https://developer.lightbend.com/start)
+
+Community
+: [gitter.im/akka/akka](https://gitter.im/akka/akka)
+
+Tweet
+: [@akkateam](https://twitter.com/akkateam), [@raboofje](https://twitter.com/raboofje)
+
+@notes[And talk to me afterwards :). Time: 12:45-12:55]
 
 @@@

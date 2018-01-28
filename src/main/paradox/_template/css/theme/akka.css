@@ -14,6 +14,10 @@ section.has-light-background h3, section.has-light-background h4 {
   color: #fff;
 }
 
+.orange {
+  color: #ff931e;
+}
+
 /*********************************************
  * GLOBAL STYLES
  *********************************************/

@@ -25,7 +25,6 @@ public class Basics {
   public void run() {
     //#init
     ActorSystem system = ActorSystem.create();
-    Materializer materializer = ActorMaterializer.create(system);
     Http http = Http.get(system);
     //#init
 
@@ -35,6 +34,8 @@ public class Basics {
     //#bind
 
     //#run
+    Materializer materializer = ActorMaterializer.create(system);
+
     CompletionStage<ServerBinding> bound = bind
       .to(Sink.foreach(c -> out.println("Got HTTP connection!")))
       .run(materializer);
@@ -66,5 +67,20 @@ public class Basics {
     // Use it to handle the connection:
     connection.handleWith(flow, materializer);
     //#handleWith
+  }
+  void bindAndHandle() {
+    Materializer materializer = null;
+    Flow<HttpRequest, HttpResponse, NotUsed> myflow = null;
+    Http http = null;
+    //#bindAndHandle
+    // Construct your flow:
+    Flow<HttpRequest, HttpResponse, NotUsed> flow = myflow;
+
+    // Use it to handle connections:
+    http.bindAndHandle(
+      flow,
+      ConnectHttp.toHost("localhost", 8080),
+      materializer);
+    //#bindAndHandle
   }
 }
