@@ -491,7 +491,7 @@ Client API
 
 @@@
 
-@@@section { data-background="alpakka.jpg" }
+@@@section { data-background="images/alpakka.jpg" }
 
 # @span[Alpakka]{.orange}
 
