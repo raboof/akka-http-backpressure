@@ -15,13 +15,16 @@ Agenda:
 1. Akka HTTP
 1. Demo!
 
-@notes[
-What to expect<br>
-* history, concepts and scope of reactive streams<br>
-* Close look at main concepts of one RS impl: Akka Streams<br>
-* how Akka Streams is really at the core of the Akka HTTP lib<br>
+@@@@notes
+
+What to expect
+
+* history, concepts and scope of reactive streams
+* Close look at main concepts of one RS impl: Akka Streams
+* how Akka Streams is really at the core of the Akka HTTP lib
 * A 'live' example of an Akka HTTP application leveraging streams
-]
+
+@@@@
 
 @@@
 
@@ -63,11 +66,19 @@ Open Source toolkit for building Concurrent, Distributed, Resilient Message-Driv
 
 @@snip[x]($root$/src/main/java/rs/async/Asynchronous.java){#enqueue}
 
-@notes[Same trivial snippet in Actor. Main diff: task in mailbox. Saves threads.<br>
-Resilience. Back a slide, highlight the sending thread no longer has to deal with the exception<br>
-Coordination also much easier when using message passing<br>
-Nothing new: smalltalk, erlang<br>
-Note: there are of course many ways to make a system asynchronous, and I'm sure many of you have introduced asynchronous boundaries on your own perhaps even with using a library. Actors are just a particularly nice way to achieve it.]
+@@@@notes
+
+Same trivial snippet in Actor. Main diff: task in mailbox. Saves threads.
+
+Resilience. Back a slide, highlight the sending thread no longer has to deal with the exception
+
+Coordination also much easier when using message passing
+
+Nothing new: smalltalk, erlang
+
+Note: there are of course many ways to make a system asynchronous, and I'm sure many of you have introduced asynchronous boundaries on your own perhaps even with using a library. Actors are just a particularly nice way to achieve it.
+
+@@@@
 
 @@@
 
@@ -527,9 +538,13 @@ Community for Akka Streams connectors
 
 ## Exposed via HTTP
 
-@notes[Naive implementation with `Sink.reduce(_ + _)`. <br>
+@@@@notes
+
+Naive implementation with `Sink.reduce(_ + _)`.
+
 Interaction moment: who spotted the security issue?
-]
+
+@@@@
 
 @@@
 
