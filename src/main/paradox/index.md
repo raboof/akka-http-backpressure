@@ -535,23 +535,32 @@ Interaction moment: who spotted the security issue?
 
 @@@section
 
-<section>
-<h2>Let's put some load on it!</h2>
+@@@@section
 
-<img src="Gatling-logo.png">
-</section>
+## Let's put some load on it!
 
-<section>
-<img src="visualvm_overloaded.png">
-</section>
+![Gatling logo](Gatling-logo.png)
 
-<section>
-<img src="gatling_overloaded.png">
-</section>
+@@@@
 
-<section>
-<img src="gatling_overloaded2.png">
-</section>
+@@@@section
+
+![VisualVM overloaded](visualvm_overloaded.png)
+
+@@@@
+
+@@@@section
+
+![Gatling report overloaded](gatling_overloaded.png)
+
+@@@@
+
+@@@@section
+
+![Gatling report overloaded 2](gatling_overloaded2.png)
+
+@@@@
+
 @@@
 
 @@@section
@@ -564,42 +573,58 @@ Interaction moment: who spotted the security issue?
 
 @@@section
 
-<section>
-<h2>Let's go again!</h2>
+@@@@section
 
-<img src="Gatling-logo.png">
-</section>
+## Let's go again!
 
-<section>
-<img src="visualvm_ok.png">
-<aside class="notes">Check the scale! Fairly healthy, though gc churns</aside>
-</section>
+![Gatling logo](Gatling-logo.png)
 
-<section>
-<img src="gatling_ok.png">
-</section>
+@@@@
 
-<section>
-<img src="gatling_ok2.png">
-</section>
+@@@@section
+
+![VisualVM ok](visualvm_ok.png)
+
+@notes[Check the scale! Fairly healthy, though gc churns]
+
+@@@@
+
+@@@@section
+
+![Gatling OK](gatling_ok.png)
+
+@@@@
+
+@@@@section
+
+![Gatling OK 2](gatling_ok2.png)
+
+@@@@
+
 @@@
-
 
 @@@section
 
-<section>
-<h2>With room to spare</h2>
+@@@@section
 
-<img src="visualvm_pushed.png">
-</section>
+## With room to spare
 
-<section>
-<img src="gatling_pushed.png">
-</section>
+![VisualVM pushed](visualvm_pushed.png)
 
-<section>
-<img src="gatling_pushed2.png">
-</section>
+@@@@
+
+@@@@section
+
+![Gatling pushed](gatling_pushed.png)
+
+@@@@
+
+@@@@section
+
+![Gatling pushed 2](gatling_pushed2.png)
+
+@@@@
+
 @@@
 
 
