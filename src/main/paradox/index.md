@@ -35,7 +35,7 @@ What to expect<br>
 
 @@@section
 
-![Akka logo](akka_full_color.svg)
+![Akka logo](images/akka_full_color.svg)
 
 Open Source toolkit for building Concurrent, Distributed, Resilient Message-Driven applications on the JVM
 
@@ -99,7 +99,7 @@ Actor model
 
 @@@
 
-@@@section { data-background-video="fishermen.mp4" }
+@@@section { data-background-video="images/fishermen.mp4" }
 
 # @span[OutOfMemoryError]{.orange .fragment}
 
@@ -111,7 +111,7 @@ Actor model
 
 ### Reactive Streams Timeline
 
-![Reactive Streams Timeline](reactive_streams_timeline.png)
+![Reactive Streams Timeline](images/reactive_streams_timeline.png)
 
 @notes[Industry got together under Reactive Streams working group initiated by Viktor Klang of the Akka Team (not limited to JVM)]
 
@@ -180,7 +180,7 @@ No JDK9? No problem!
 
 @@@section
 
-![Source, Flow and Sink](stream-blocks.svg)
+![Source, Flow and Sink](images/stream-blocks.svg)
 
 @notes[starts of our story]
 
@@ -268,7 +268,7 @@ Scala:
 
 @@snip[x]($root$/src/main/java/streams/Materialization.java){#fusing}
 
-![Source, Flow and Sink](stream-unfused.svg)
+![Source, Flow and Sink](images/stream-unfused.svg)
 
 @notes[Advantage of 2-phase: reusable building blocks, but opportunity for optimizations at materialization time]
 
@@ -280,7 +280,7 @@ Scala:
 
 @@snip[x]($root$/src/main/java/streams/Materialization.java){#fusing-explicit-async}
 
-![Source, Flow and Sink](stream-async.svg)
+![Source, Flow and Sink](images/stream-async.svg)
 
 @@@
 
@@ -290,7 +290,7 @@ Scala:
 
 @@snip[x]($root$/src/main/java/streams/Materialization.java){#fusing-async}
 
-![Source, Flow and Sink](stream-async.svg)
+![Source, Flow and Sink](images/stream-async.svg)
 
 @@@
 
@@ -300,7 +300,7 @@ Scala:
 
 Demand is signalled across async boundaries
 
-![Backpressure across async boundary](backpressure-propagation.svg)
+![Backpressure across async boundary](images/backpressure-propagation.svg)
 
 @@@
 
@@ -310,7 +310,7 @@ Demand is signalled across async boundaries
 
 Thanks to Reactive Streams, across different libraries:
 
-![Backpressure across async boundary](backpressure-propagation-across-libs.svg)
+![Backpressure across async boundary](images/backpressure-propagation-across-libs.svg)
 
 @@@
 
@@ -320,9 +320,9 @@ Thanks to Reactive Streams, across different libraries:
 
 Often also possible across external protocols, i.e. TCP:
 
-![TCP window](tcp-window-initial.png)
+![TCP window](images/tcp-window-initial.png)
 
-@span[![TCP window](tcp-window-1.png)]{.fragment}
+@span[![TCP window](images/tcp-window-1.png)]{.fragment}
 
 @@@
 
@@ -332,7 +332,7 @@ Often also possible across external protocols, i.e. TCP:
 
 Can be seen in e.g. wireshark:
 
-![Wireshark backpressure](wireshark-fullwindow-2.png)
+![Wireshark backpressure](images/wireshark-fullwindow-2.png)
 
 @notes[and keeps heartbeating]
 
@@ -350,7 +350,7 @@ Can be seen in e.g. wireshark:
 
 ## We've only just begun...
 
-![more complicated graphs](compose_graph.png)
+![more complicated graphs](images/compose_graph.png)
 
 @notes[Only scratched the surface, many combinators to create complex graphs, custom shapes, fan in/out, materialization. Not important to show backpressure though.]
 
@@ -466,9 +466,9 @@ Client API
 
 @@@section
 
-![play](play.svg)
+![play](images/play.svg)
 
-![lagom](lagom.svg) 
+![lagom](images/lagom.svg) 
 
 @notes[Conclusion: Akka and Akka Streams foundation, leveraged by Akka HTTP and other libraries]
 
@@ -511,7 +511,7 @@ Community for Akka Streams connectors
 
 @@@section
 
-![alpakka logo collection](alpakka/collection.svg)
+![alpakka logo collection](images/alpakka/collection.svg)
 
 @@@
 
@@ -539,25 +539,25 @@ Interaction moment: who spotted the security issue?
 
 ## Let's put some load on it!
 
-![Gatling logo](Gatling-logo.png)
+![Gatling logo](images/Gatling-logo.png)
 
 @@@@
 
 @@@@section
 
-![VisualVM overloaded](visualvm_overloaded.png)
+![VisualVM overloaded](images/visualvm_overloaded.png)
 
 @@@@
 
 @@@@section
 
-![Gatling report overloaded](gatling_overloaded.png)
+![Gatling report overloaded](images/gatling_overloaded.png)
 
 @@@@
 
 @@@@section
 
-![Gatling report overloaded 2](gatling_overloaded2.png)
+![Gatling report overloaded 2](images/gatling_overloaded2.png)
 
 @@@@
 
@@ -577,13 +577,13 @@ Interaction moment: who spotted the security issue?
 
 ## Let's go again!
 
-![Gatling logo](Gatling-logo.png)
+![Gatling logo](images/Gatling-logo.png)
 
 @@@@
 
 @@@@section
 
-![VisualVM ok](visualvm_ok.png)
+![VisualVM ok](images/visualvm_ok.png)
 
 @notes[Check the scale! Fairly healthy, though gc churns]
 
@@ -591,13 +591,13 @@ Interaction moment: who spotted the security issue?
 
 @@@@section
 
-![Gatling OK](gatling_ok.png)
+![Gatling OK](images/gatling_ok.png)
 
 @@@@
 
 @@@@section
 
-![Gatling OK 2](gatling_ok2.png)
+![Gatling OK 2](images/gatling_ok2.png)
 
 @@@@
 
@@ -609,19 +609,19 @@ Interaction moment: who spotted the security issue?
 
 ## With room to spare
 
-![VisualVM pushed](visualvm_pushed.png)
+![VisualVM pushed](images/visualvm_pushed.png)
 
 @@@@
 
 @@@@section
 
-![Gatling pushed](gatling_pushed.png)
+![Gatling pushed](images/gatling_pushed.png)
 
 @@@@
 
 @@@@section
 
-![Gatling pushed 2](gatling_pushed2.png)
+![Gatling pushed 2](images/gatling_pushed2.png)
 
 @@@@
 
