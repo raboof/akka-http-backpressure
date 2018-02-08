@@ -13,4 +13,3 @@ libraryDependencies ++= Seq(
 enablePlugins(GatlingPlugin)
 
 enablePlugins(ParadoxRevealPlugin)
-paradoxTheme := Some("net.bzzt" % "paradox-theme-reveal-js" % "0.1.0-SNAPSHOT")
