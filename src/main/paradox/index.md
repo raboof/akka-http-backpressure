@@ -62,9 +62,13 @@ Open Source toolkit for building Concurrent, Distributed, Resilient Message-Driv
 
 ### Asynchronous approach
 
-@@snip[x]($root$/src/main/java/rs/async/Asynchronous.java){#actor}
+@@snip[x]($root$/src/main/java/rs/async/Asynchronous.java){#actor group="java"}
 
-@@snip[x]($root$/src/main/java/rs/async/Asynchronous.java){#enqueue}
+@@snip[x]($root$/src/main/java/rs/async/Asynchronous.java){#enqueue group="java"}
+
+@@snip[x]($root$/src/main/scala/rs/async/Asynchronous.scala){#actor group="scala"}
+
+@@snip[x]($root$/src/main/scala/rs/async/Asynchronous.scala){#enqueue group="scala"}
 
 @@@@notes
 
@@ -92,7 +96,7 @@ Actor model
 
 @span[Persistence (Event Sourcing)]{ .fragment }
 
-@span[HTTP]{ .fragment } 
+@span[HTTP]{ .fragment }
 
 @span[[Reactive Manifesto](https://www.reactivemanifesto.org)]{ .fragment }
 
@@ -104,9 +108,13 @@ Actor model
 
 ### So far the good news...
 
-@@snip[x]($root$/src/main/java/rs/async/Asynchronous.java){#actor}
+@@snip[x]($root$/src/main/java/rs/async/Asynchronous.java){#actor group="java"}
 
-@@snip[x]($root$/src/main/java/rs/async/Asynchronous.java){#enqueue}
+@@snip[x]($root$/src/main/java/rs/async/Asynchronous.java){#enqueue group="java"}
+
+@@snip[x]($root$/src/main/scala/rs/async/Asynchronous.scala){#actor group="scala"}
+
+@@snip[x]($root$/src/main/scala/rs/async/Asynchronous.scala){#enqueue group="scala"}
 
 @@@
 
@@ -200,8 +208,8 @@ No JDK9? No problem!
 @@@section
 
 @@snip[x]($root$/src/main/java/streams/Intro.java){#source-no}
-@@snip[x]($root$/src/main/java/streams/Intro.java){#flow-no group="x fragment"}
-@@snip[x]($root$/src/main/java/streams/Intro.java){#sink-no group="x fragment"}
+@@snip[x]($root$/src/main/java/streams/Intro.java){#flow-no .fragment}
+@@snip[x]($root$/src/main/java/streams/Intro.java){#sink-no .fragment}
 
 @notes[Before we dive into the specifics, let's start with some small examples to get a feel]
 
@@ -212,18 +220,18 @@ No JDK9? No problem!
 @@snip[x]($root$/src/main/java/streams/Intro.java){#source}
 @@snip[x]($root$/src/main/java/streams/Intro.java){#flow}
 @@snip[x]($root$/src/main/java/streams/Intro.java){#sink}
-@@snip[x]($root$/src/main/java/streams/Intro.java){#graph group="x fragment"}
-@@snip[x]($root$/src/main/java/streams/Intro.java){#run group="x fragment"}
+@@snip[x]($root$/src/main/java/streams/Intro.java){#graph .fragment}
+@@snip[x]($root$/src/main/java/streams/Intro.java){#run .fragment}
 
 @@@
 
 @@@section
 
-@@snip[x]($root$/src/main/scala/sstreams/Intro.scala){#source}
-@@snip[x]($root$/src/main/scala/sstreams/Intro.scala){#flow}
-@@snip[x]($root$/src/main/scala/sstreams/Intro.scala){#sink}
-@@snip[x]($root$/src/main/scala/sstreams/Intro.scala){#graph group="x fragment"}
-@@snip[x]($root$/src/main/scala/sstreams/Intro.scala){#run group="x fragment"}
+@@snip[x]($root$/src/main/scala/streams/Intro.scala){#source}
+@@snip[x]($root$/src/main/scala/streams/Intro.scala){#flow}
+@@snip[x]($root$/src/main/scala/streams/Intro.scala){#sink}
+@@snip[x]($root$/src/main/scala/streams/Intro.scala){#graph .fragment}
+@@snip[x]($root$/src/main/scala/streams/Intro.scala){#run .fragment}
 
 @@@
 
@@ -235,7 +243,7 @@ Java:
 
 Scala:
 
-@@snip[x]($root$/src/main/scala/sstreams/Intro.scala){#short}
+@@snip[x]($root$/src/main/scala/streams/Intro.scala){#short}
 
 @notes[we really try to make the API really easy to use for Java and Scala]
 
@@ -246,7 +254,9 @@ Scala:
 
 ## Materialization
 
-@@snip[x]($root$/src/main/java/streams/Materialization.java){#multiple}
+@@snip[x]($root$/src/main/java/streams/Materialization.java){#multiple group="java"}
+
+@@snip[x]($root$/src/main/scala/streams/Materialization.scala){#multiple group="scala"}
 
 @notes[running = 2-stage: build graph, run graph. run = materialization. Same graph can be materialized multiple times.]
 
@@ -256,7 +266,9 @@ Scala:
 
 ## Materialized values
 
-@@snip[x]($root$/src/main/java/streams/Materialization.java){#source}
+@@snip[x]($root$/src/main/java/streams/Materialization.java){#source group="java"}
+
+@@snip[x]($root$/src/main/scala/streams/Materialization.scala){#source group="scala"}
 
 @note[Streams and actors go well together, default left]
 
@@ -266,7 +278,9 @@ Scala:
 
 ## Materialized values
 
-@@snip[x]($root$/src/main/java/streams/Materialization.java){#sink}
+@@snip[x]($root$/src/main/java/streams/Materialization.java){#sink group="java"}
+
+@@snip[x]($root$/src/main/scala/streams/Materialization.scala){#sink group="scala"}
 
 @note[Streams and actors go well together, default left]
 
@@ -277,7 +291,9 @@ Scala:
 
 ## Actor materialization
 
-@@snip[x]($root$/src/main/java/streams/Materialization.java){#fusing}
+@@snip[x]($root$/src/main/java/streams/Materialization.java){#fusing group="java"}
+
+@@snip[x]($root$/src/main/scala/streams/Materialization.scala){#fusing group="scala"}
 
 ![Source, Flow and Sink](images/stream-unfused.svg)
 
@@ -289,7 +305,9 @@ Scala:
 
 # Fusing
 
-@@snip[x]($root$/src/main/java/streams/Materialization.java){#fusing-explicit-async}
+@@snip[x]($root$/src/main/java/streams/Materialization.java){#fusing-explicit-async group="java"}
+
+@@snip[x]($root$/src/main/scala/streams/Materialization.scala){#fusing-explicit-async group="scala"}
 
 ![Source, Flow and Sink](images/stream-async.svg)
 
@@ -299,7 +317,9 @@ Scala:
 
 # Fusing
 
-@@snip[x]($root$/src/main/java/streams/Materialization.java){#fusing-async}
+@@snip[x]($root$/src/main/java/streams/Materialization.java){#fusing-async group="java"}
+
+@@snip[x]($root$/src/main/scala/streams/Materialization.scala){#fusing-async group="scala"}
 
 ![Source, Flow and Sink](images/stream-async.svg)
 
@@ -379,10 +399,15 @@ Can be seen in e.g. wireshark:
 
 ## Binding
 
-@@snip[x]($root$/src/main/java/http/Basics.java){#init}
-@@snip[x]($root$/src/main/java/http/Basics.java){#bind group="x fragment"}
-@@snip[x]($root$/src/main/java/http/Basics.java){#run group="x fragment"}
-@@snip[x]($root$/src/main/java/http/Basics.java){#log group="x fragment"}
+@@snip[x]($root$/src/main/java/http/Basics.java){#init group="java"}
+@@snip[x]($root$/src/main/java/http/Basics.java){#bind group="java" .fragment}
+@@snip[x]($root$/src/main/java/http/Basics.java){#run group="java" .fragment}
+@@snip[x]($root$/src/main/java/http/Basics.java){#log group="java" .fragment}
+
+@@snip[x]($root$/src/main/scala/http/Basics.scala){#init group="scala"}
+@@snip[x]($root$/src/main/scala/http/Basics.scala){#bind group="scala" .fragment}
+@@snip[x]($root$/src/main/scala/http/Basics.scala){#run group="scala" .fragment}
+@@snip[x]($root$/src/main/scala/http/Basics.scala){#log group="scala" .fragment}
 
 @@@
 
@@ -392,11 +417,15 @@ Can be seen in e.g. wireshark:
 
 Is a `Flow[Response, Request, _]`:
 
-@@snip[x]($root$/src/main/java/http/Basics.java){#flow}
+@@snip[x]($root$/src/main/java/http/Basics.java){#flow group="java"}
+
+@@snip[x]($root$/src/main/scala/http/Basics.scala){#flow group="scala"}
 
 @span[Or provide your `Flow[Request, Response, _]`:]{.fragment}
 
-@@snip[x]($root$/src/main/java/http/Basics.java){#handleWith group="x fragment"}
+@@snip[x]($root$/src/main/java/http/Basics.java){#handleWith group="java" .fragment}
+
+@@snip[x]($root$/src/main/scala/http/Basics.scala){#handleWith group="scala" .fragment}
 
 @@@
 
@@ -404,7 +433,9 @@ Is a `Flow[Response, Request, _]`:
 
 ## http.bindAndHandle()
 
-@@snip[x]($root$/src/main/java/http/Basics.java){#bindAndHandle}
+@@snip[x]($root$/src/main/java/http/Basics.java){#bindAndHandle group="java"}
+
+@@snip[x]($root$/src/main/scala/http/Basics.scala){#bindAndHandle group="scala"}
 
 @notes[Remember materialization? This is so easy because the Flow is a blueprint that can be materialized many times]
 
@@ -414,15 +445,19 @@ Is a `Flow[Response, Request, _]`:
 
 ## Routing DSL
 
-@@snip[x]($root$/src/main/java/http/Routing.java){#simple}
+@@snip[x]($root$/src/main/java/http/Routing.java){#simple group="java"}
 
-@@snip[x]($root$/src/main/java/http/Routing.java){#run group="x fragment"}
+@@snip[x]($root$/src/main/java/http/Routing.java){#run group="java" .fragment}
+
+@@snip[x]($root$/src/main/scala/http/Routing.scala){#simple group="scala"}
+
+@@snip[x]($root$/src/main/scala/http/Routing.scala){#run group="scala" .fragment}
 
 @@@
 
 @@@section
 
-## Example: numbers 
+## Example: numbers
 
 @notes[Wrap an Akka HTTP application around the numbers demo from the Akka Streams section]
 
@@ -432,28 +467,40 @@ Is a `Flow[Response, Request, _]`:
 
 ## Path matching
 
-@@snip[x]($root$/src/main/java/http/Routing.java){#simple}
+@@snip[x]($root$/src/main/java/http/Routing.java){#simple group="java"}
+@@snip[x]($root$/src/main/scala/http/Routing.scala){#simple group="scala"}
 
-@@snip[x]($root$/src/main/java/http/PathApi.java){#pathApi1 group="x fragment"}
-@@snip[x]($root$/src/main/java/http/PathApi.java){#pathApi group="x fragment"}
+@@snip[x]($root$/src/main/java/http/PathApi.java){#pathApi1 group="java" .fragment}
+@@snip[x]($root$/src/main/java/http/PathApi.java){#pathApi group="java" .fragment}
 
-@@@
-
-@@@section
-
-@@snip[x]($root$/src/main/java/http/PathApi.java){#pathApi}
-
-@@snip[x]($root$/src/main/java/http/PathMatching.java){#segment}
-
-@@snip[x]($root$/src/main/java/http/PathMatching.java){#staticimports group="x fragment"}
-
-@@snip[x]($root$/src/main/java/http/PathMatching.java){#segments group="x fragment"}
+@@snip[x]($root$/src/main/scala/http/PathApi.scala){#pathApi1 group="scala" .fragment}
+@@snip[x]($root$/src/main/scala/http/PathApi.scala){#pathApi group="scala" .fragment}
 
 @@@
 
 @@@section
 
-@@snip[x]($root$/src/main/java/http/PathMatching.java){#advanced}
+@@snip[x]($root$/src/main/java/http/PathApi.java){#pathApi group="java"}
+
+@@snip[x]($root$/src/main/java/http/PathMatching.java){#segment group="java"}
+
+@@snip[x]($root$/src/main/java/http/PathMatching.java){#staticimports group="java" .fragment}
+
+@@snip[x]($root$/src/main/java/http/PathMatching.java){#segments group="java" .fragment}
+
+@@snip[x]($root$/src/main/scala/http/PathApi.scala){#pathApi group="scala"}
+
+@@snip[x]($root$/src/main/scala/http/PathMatching.scala){#segment group="scala"}
+
+@@snip[x]($root$/src/main/scala/http/PathMatching.scala){#segments group="scala" .fragment}
+
+@@@
+
+@@@section
+
+@@snip[x]($root$/src/main/java/http/PathMatching.java){#advanced group="java"}
+
+@@snip[x]($root$/src/main/scala/http/PathMatching.scala){#advanced group="scala"}
 
 This will match paths like `foo/bar/X42/edit` or `foo/bar/X37/create`.
 
@@ -479,7 +526,7 @@ Client API
 
 ![play](images/play.svg)
 
-![lagom](images/lagom.svg) 
+![lagom](images/lagom.svg)
 
 @notes[Conclusion: Akka and Akka Streams foundation, leveraged by Akka HTTP and other libraries]
 
@@ -582,7 +629,17 @@ Interaction moment: who spotted the security issue?
 
 ## Stream the entity
 
-@@snip[x]($root$/src/main/java/demo/FtpServerHttpApp.java){#streamResponseEntity}
+Avoid:
+
+@@snip[x]($root$/src/main/java/demo/FtpServerHttpApp.java){#reduceResponseEntity group="java"}
+
+@@snip[x]($root$/src/main/scala/demo/FtpServerHttpApp.scala){#reduceResponseEntity group="scala"}
+
+But use:
+
+@@snip[x]($root$/src/main/java/demo/FtpServerHttpApp.java){#streamResponseEntity group="java"}
+
+@@snip[x]($root$/src/main/scala/demo/FtpServerHttpApp.scala){#streamResponseEntity group="scala"}
 
 @@@
 
@@ -677,4 +734,19 @@ Tweet
 
 @notes[And talk to me afterwards :). Time: 12:45-12:55]
 
+@@@
+
+@span[$selectedLanguage$]{#selectedLanguage}
+
+@@@vars
+<script>
+  const selectedLanguage = document.getElementById('selectedLanguage').innerHTML.toLowerCase()
+  const hiddenLanguage = (selectedLanguage == "java") ? "scala" : "java"
+
+  console.log(selectedLanguage)
+  var javaFragments = document.getElementsByClassName('group-' + hiddenLanguage)
+  while (javaFragments.length > 0) {
+    javaFragments[0].remove()
+  }
+</script>
 @@@

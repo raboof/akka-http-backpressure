@@ -1,4 +1,4 @@
-package sstreams
+package sc.streams
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
@@ -27,6 +27,6 @@ class Intro {
   //#short
   Source(0 to 20000000)
     .map(_.toString)
-    .runForeach(System.out.println)
+    .runForeach(println)
   //#short
 }

@@ -59,9 +59,15 @@ public class FtpServerHttpApp extends AllDirectives {
     Http http = Http.get(system);
 
     Route route = path(PathMatchers.segment("file").slash().concat(PathMatchers.segment()), filename -> {
-      Source<ByteString, CompletionStage<IOResult>> source = Ftp.fromPath(filename, ftpSettings);
-      CompletionStage<ByteString> result = source.toMat(Sink.reduce(ByteString::concat), Keep.right()).run(materializer);
+      //#reduceResponseEntity
+      Source<ByteString, CompletionStage<IOResult>> source =
+        Ftp.fromPath(filename, ftpSettings);
+
+      CompletionStage<ByteString> result =
+        source.toMat(Sink.reduce(ByteString::concat), Keep.right()).run(materializer);
+
       return onSuccess(() -> result, bytes -> complete(HttpEntities.create(bytes)));
+      //#reduceResponseEntity
     });
 
     http.bindAndHandle(
