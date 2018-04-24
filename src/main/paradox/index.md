@@ -38,15 +38,17 @@ What to expect
 
 @@@section
 
+@@@@section
+
 ![Akka logo](images/akka_full_color.svg)
 
 Open Source toolkit for building Concurrent, Distributed, Resilient Message-Driven applications on the JVM
 
 @notes[Akka grew out of the realization, circa 2009, that threads are a heavyweight abstraction that is hard to make resilient. Inspired by Erlang, asynchronous model, actor model, but not covering that today.]
 
-@@@
+@@@@
 
-@@@section
+@@@@section
 
 ### Traditional synchronous model
 
@@ -55,6 +57,8 @@ Open Source toolkit for building Concurrent, Distributed, Resilient Message-Driv
 @@snip[Synchronous.java]($root$/src/main/java/rs/async/Synchronous.java){#perform}
 
 @notes[As a refresher on the advantages of async code I have a tiny example. This should look familiar to most of you, right? a number of tasks are performed by a service]
+
+@@@@
 
 @@@
 
@@ -264,6 +268,8 @@ Scala:
 
 @@@section
 
+@@@@section
+
 ## Materialized values
 
 @@snip[x]($root$/src/main/java/streams/Materialization.java){#source group="java"}
@@ -272,9 +278,9 @@ Scala:
 
 @note[Streams and actors go well together, default left]
 
-@@@
+@@@@
 
-@@@section
+@@@@section
 
 ## Materialized values
 
@@ -284,10 +290,13 @@ Scala:
 
 @note[Streams and actors go well together, default left]
 
+@@@@
+
 @@@
 
-
 @@@section
+
+@@@@section
 
 ## Actor materialization
 
@@ -299,9 +308,9 @@ Scala:
 
 @notes[Advantage of 2-phase: reusable building blocks, but opportunity for optimizations at materialization time]
 
-@@@
+@@@@
 
-@@@section
+@@@@section
 
 # Fusing
 
@@ -311,9 +320,9 @@ Scala:
 
 ![Source, Flow and Sink](images/stream-async.svg)
 
-@@@
+@@@@
 
-@@@section
+@@@@section
 
 # Fusing
 
@@ -323,9 +332,13 @@ Scala:
 
 ![Source, Flow and Sink](images/stream-async.svg)
 
+@@@@
+
 @@@
 
 @@@section
+
+@@@@section
 
 ## Backpressure propagation
 
@@ -333,9 +346,9 @@ Demand is signalled across async boundaries
 
 ![Backpressure across async boundary](images/backpressure-propagation.svg)
 
-@@@
+@@@@
 
-@@@section
+@@@@section
 
 ## Backpressure propagation
 
@@ -343,9 +356,9 @@ Thanks to Reactive Streams, across different libraries:
 
 ![Backpressure across async boundary](images/backpressure-propagation-across-libs.svg)
 
-@@@
+@@@@
 
-@@@section
+@@@@section
 
 ## Backpressure propagation
 
@@ -355,9 +368,9 @@ Often also possible across external protocols, i.e. TCP:
 
 @span[![TCP window](images/tcp-window-1.png)]{.fragment}
 
-@@@
+@@@@
 
-@@@section
+@@@@section
 
 ## Backpressure propagation
 
@@ -366,6 +379,8 @@ Can be seen in e.g. wireshark:
 ![Wireshark backpressure](images/wireshark-fullwindow-2.png)
 
 @notes[and keeps heartbeating]
+
+@@@@
 
 @@@
 
@@ -457,13 +472,15 @@ Is a `Flow[Response, Request, _]`:
 
 @@@section
 
+@@@@section
+
 ## Example: numbers
 
 @notes[Wrap an Akka HTTP application around the numbers demo from the Akka Streams section]
 
-@@@
+@@@@
 
-@@@section
+@@@@section
 
 ## Path matching
 
@@ -476,9 +493,9 @@ Is a `Flow[Response, Request, _]`:
 @@snip[x]($root$/src/main/scala/http/PathApi.scala){#pathApi1 group="scala" .fragment}
 @@snip[x]($root$/src/main/scala/http/PathApi.scala){#pathApi group="scala" .fragment}
 
-@@@
+@@@@
 
-@@@section
+@@@@section
 
 @@snip[x]($root$/src/main/java/http/PathApi.java){#pathApi group="java"}
 
@@ -494,9 +511,9 @@ Is a `Flow[Response, Request, _]`:
 
 @@snip[x]($root$/src/main/scala/http/PathMatching.scala){#segments group="scala" .fragment}
 
-@@@
+@@@@
 
-@@@section
+@@@@section
 
 @@snip[x]($root$/src/main/java/http/PathMatching.java){#advanced group="java"}
 
@@ -505,6 +522,8 @@ Is a `Flow[Response, Request, _]`:
 This will match paths like `foo/bar/X42/edit` or `foo/bar/X37/create`.
 
 @notes[Possible stretch topics here: Path concatenation/Nested routes, error handling]
+
+@@@@
 
 @@@
 
