@@ -1,7 +1,9 @@
 # reactive-streams-demo
 
-This repo contains all the resources associated with the Reactive Streams talk
-I gave at JVMCON in 2018.
+This repo contains all the resources associated with my Reactive Streams talk.
+
+There is a Scala and a Java version of the slides for this talk.
+The Scala version can be found at https://raboof.github.io/akka-http-backpressure/.
 
 ## Generating
 
