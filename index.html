@@ -1,0 +1,573 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Handle Intense Workloads with Backpressure and Reactive Streams</title>
+
+<link rel="stylesheet" href="css/reveal.css">
+<link rel="stylesheet" href="css/extra.css">
+<link rel="stylesheet" href="css/theme/akka.css">
+
+<!-- Theme used for syntax highlighting of code -->
+<link rel="stylesheet" href="lib/css/zenburn.css">
+
+<!-- Printing and PDF exports -->
+<script>
+var link = document.createElement( 'link' );
+link.rel = 'stylesheet';
+link.type = 'text/css';
+link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+document.getElementsByTagName( 'head' )[0].appendChild( link );
+</script>
+</head>
+<body>
+
+
+<div class="reveal">
+<div class="slides">
+<section data-background="#15a9ce">
+<h3><a href="#handle-intense-workloads-with-backpressure-and-reactive-streams" name="handle-intense-workloads-with-backpressure-and-reactive-streams" class="anchor"><span class="anchor-link"></span></a>Handle Intense Workloads with Backpressure and Reactive Streams</h3>
+<h5><a href="#arnout-engelen" name="arnout-engelen" class="anchor"><span class="anchor-link"></span></a>Arnout Engelen</h5></section><section>
+<p>Agenda:</p>
+<ol>
+  <li>Reactive Streams</li>
+  <li>Akka Streams</li>
+  <li>Akka HTTP</li>
+  <li>Demo!</li>
+</ol><aside class="notes">
+<p>What to expect</p>
+<ul>
+  <li>history, concepts and scope of reactive streams</li>
+  <li>Close look at main concepts of one RS impl: Akka Streams</li>
+  <li>how Akka Streams is really at the core of the Akka HTTP lib</li>
+  <li>A &lsquo;live&rsquo; example of an Akka HTTP application leveraging streams</li>
+</ul></aside></section><section>
+<h1><a href="#1-reactive-streams" name="1-reactive-streams" class="anchor"><span class="anchor-link"></span></a>1. Reactive Streams</h1>
+<p><aside class="notes">So let&rsquo;s start with Reactive Streams. To better understand the reactive streams initiative it makes sense to look at some history of there this effort came from<br>Time: 11:55</aside></p></section><section><section>
+<p><img src="images/akka_full_color.svg" alt="Akka logo" /></p>
+<p>Open Source toolkit for building Concurrent, Distributed, Resilient Message-Driven applications on the JVM</p>
+<p><aside class="notes">Akka grew out of the realization, circa 2009, that threads are a heavyweight abstraction that is hard to make resilient. Inspired by Erlang, asynchronous model, actor model, but not covering that today.</aside></p></section><section>
+<h3><a href="#traditional-synchronous-model" name="traditional-synchronous-model" class="anchor"><span class="anchor-link"></span></a>Traditional synchronous model</h3>
+<pre class="prettyprint"><code class="language-java">class MyService {
+  public Result performTask(Task task) throws Exception {
+    // ... do work
+  }
+}</code></pre>
+<pre class="prettyprint"><code class="language-java">for (Task task: tasks) {
+  Result result = service.performTask(task);
+  // Handle result...
+}</code></pre>
+<p><aside class="notes">As a refresher on the advantages of async code I have a tiny example. This should look familiar to most of you, right? a number of tasks are performed by a service</aside></p></section></section><section>
+<h3><a href="#asynchronous-approach" name="asynchronous-approach" class="anchor"><span class="anchor-link"></span></a>Asynchronous approach</h3>
+<pre class="prettyprint group-java"><code class="language-java">static class MyActor extends AbstractActor {
+  @Override
+  public Receive createReceive() {
+    return receiveBuilder()
+            .match(Task.class, task -&gt; { /* do work */ })
+            .build();
+  }
+}</code></pre>
+<pre class="prettyprint group-java"><code class="language-java">for (Task task: tasks) {
+  actor.tell(task, noSender());
+}</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">class MyActor extends Actor {
+  override def receive = {
+    case Task(/*params*/) ⇒ /* do work */
+  }
+}</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">for (task &lt;- tasks) {
+  actor ! task
+}</code></pre><aside class="notes">
+<p>Same trivial snippet in Actor. Main diff: task in mailbox. Saves threads.</p>
+<p>Resilience. Back a slide, highlight the sending thread no longer has to deal with the exception</p>
+<p>Coordination also much easier when using message passing</p>
+<p>Nothing new: smalltalk, erlang</p>
+<p>Note: there are of course many ways to make a system asynchronous, and I&rsquo;m sure many of you have introduced asynchronous boundaries on your own perhaps even with using a library. Actors are just a particularly nice way to achieve it.</p></aside></section><section>
+<h2><a href="#akka-toolkit" name="akka-toolkit" class="anchor"><span class="anchor-link"></span></a>Akka toolkit</h2>
+<p>Actor model</p>
+<p><span class="fragment">Clustering</span></p>
+<p><span class="fragment">Persistence (Event Sourcing)</span></p>
+<p><span class="fragment">HTTP</span></p>
+<p><span class="fragment"><a href="https://www.reactivemanifesto.org">Reactive Manifesto</a></span></p>
+<p><aside class="notes">So the actor is the basic building block in Akka, but the library contains more: it turned out that the abstractions for concurrency and resiliency in the actor model lend themselves very well for modelling distributed systems, so Akka grew modules for clustering, persistence, and a HTTP stack.<br>Excellent fit for building systems that have the properties of the Reactive Manifesto</aside></p></section><section>
+<h3><a href="#so-far-the-good-news" name="so-far-the-good-news" class="anchor"><span class="anchor-link"></span></a>So far the good news&hellip;</h3>
+<pre class="prettyprint group-java"><code class="language-java">static class MyActor extends AbstractActor {
+  @Override
+  public Receive createReceive() {
+    return receiveBuilder()
+            .match(Task.class, task -&gt; { /* do work */ })
+            .build();
+  }
+}</code></pre>
+<pre class="prettyprint group-java"><code class="language-java">for (Task task: tasks) {
+  actor.tell(task, noSender());
+}</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">class MyActor extends Actor {
+  override def receive = {
+    case Task(/*params*/) ⇒ /* do work */
+  }
+}</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">for (task &lt;- tasks) {
+  actor ! task
+}</code></pre></section><section data-background-video="images/fishermen.mp4">
+<h1><a href="#" name="" class="anchor"><span class="anchor-link"></span></a><span class="orange fragment">OutOfMemoryError</span></h1>
+<p><aside class="notes">Akka is by no means the only approach to asynchronous programming: Node.js, RxJava for example also exploring the same space. And they all ran into the problem of message targets not being able to keep up. Not impossible to solve, but solutions (e.g. ack&rsquo;ing etc) ad hoc and not composable. This lead to a number of players in industry identifying the need for an interoperable mechanism to get asynchronous, backperssured streams: the Reactive Streams initiative</aside></p></section><section data-background="#489ebd">
+<h3><a href="#reactive-streams-timeline" name="reactive-streams-timeline" class="anchor"><span class="anchor-link"></span></a>Reactive Streams Timeline</h3>
+<p><img src="images/reactive_streams_timeline.png" alt="Reactive Streams Timeline" /></p>
+<p><aside class="notes">Industry got together under Reactive Streams working group initiated by Viktor Klang of the Akka Team (not limited to JVM)</aside></p></section><section data-background="#489ebd">
+<h3><a href="#reactive-streams-scope" name="reactive-streams-scope" class="anchor"><span class="anchor-link"></span></a>Reactive Streams Scope</h3>
+<p>Reactive Streams is an initiative to provide a standard for asynchronous stream processing with non-blocking back pressure. This encompasses efforts aimed at runtime environments (JVM and JavaScript) as well as network protocols</p>
+<p><a href="http://www.reactive-streams.org">http://www.reactive-streams.org</a></p></section><section>
+<h3><a href="#java-util-concurrent-flow" name="java-util-concurrent-flow" class="anchor"><span class="anchor-link"></span></a><code>java.util.concurrent.Flow</code></h3>
+<pre class="prettyprint"><code class="language-java">public interface Publisher&lt;T&gt; {
+  public void subscribe(Subscriber&lt;? super T&gt; s);
+}</code></pre>
+<pre class="prettyprint"><code class="language-java">public interface Subscriber&lt;T&gt; {
+  public void onSubscribe(Subscription s);
+  public void onNext(T t);
+  public void onError(Throwable t);
+  public void onComplete();
+}</code></pre>
+<pre class="prettyprint"><code class="language-java">public interface Subscription {
+  public void request(long n);
+  public void cancel();
+}</code></pre>
+<pre class="prettyprint"><code class="language-java">public interface Processor&lt;T, R&gt; extends Subscriber&lt;T&gt;, Publisher&lt;R&gt; {
+}</code></pre>
+<p><aside class="notes">Most significant milestone was the inclusion of the RS interfaces in JDK9 If you&rsquo;re not on JDK9 you can use the org.reactivestreams library.</aside></p></section><section>
+<h3><a href="#availablility" name="availablility" class="anchor"><span class="anchor-link"></span></a>Availablility</h3>
+<p>Included in JDK9</p>
+<p>No JDK9? No problem!</p>
+<pre><code>&lt;dependency&gt;
+  &lt;groupId&gt;org.reactivestreams&lt;/groupId&gt;
+  &lt;artifactId&gt;reactive-streams&lt;/artifactId&gt;
+  &lt;version&gt;1.0.2&lt;/version&gt;
+&lt;/dependency&gt;
+</code></pre></section><section>
+<h3><a href="#specifications" name="specifications" class="anchor"><span class="anchor-link"></span></a>Specifications</h3>
+<ul>
+  <li>11-17 requirements (some subtle). Each.</li>
+  <li>Technology Compatibility Kit (TCK)</li>
+</ul>
+<p><aside class="notes">simplicity is deceptive: TCK for conformance checking. Originally planned: both user-facing API and an interoperability API. User-facing scrapped ~2014 so libraries can provide their own, ideomatic impl.</aside></p></section><section>
+<h1><a href="#2-akka-streams" name="2-akka-streams" class="anchor"><span class="anchor-link"></span></a>2. Akka Streams</h1>
+<p><aside class="notes">Before we start: hands up Java/Scala experience? Will show a bit of both.<br>Time: 12:05-12:10</aside></p></section><section>
+<p><img src="images/stream-blocks.svg" alt="Source, Flow and Sink" /></p>
+<p><aside class="notes">starts of our story</aside></p></section><section>
+<pre class="prettyprint"><code class="language-java">Source.range(0, 20000000);</code></pre>
+<pre class="prettyprint fragment"><code class="language-java">Flow.fromFunction(n -&gt; n.toString());</code></pre>
+<pre class="prettyprint fragment"><code class="language-java">Sink.foreach(str -&gt; System.out.println(str));</code></pre>
+<p><aside class="notes">Before we dive into the specifics, let&rsquo;s start with some small examples to get a feel</aside></p></section><section>
+<pre class="prettyprint"><code class="language-java">Source&lt;Integer, NotUsed&gt; source =
+  Source.range(0, 20000000);</code></pre>
+<pre class="prettyprint"><code class="language-java">Flow&lt;Integer, String, NotUsed&gt; flow =
+  Flow.fromFunction(n -&gt; n.toString());</code></pre>
+<pre class="prettyprint"><code class="language-java">Sink&lt;String, CompletionStage&lt;Done&gt;&gt; sink =
+  Sink.foreach(str -&gt; System.out.println(str));</code></pre>
+<pre class="prettyprint fragment"><code class="language-java">RunnableGraph&lt;NotUsed&gt; runnable =
+  source.via(flow).to(sink);</code></pre>
+<pre class="prettyprint fragment"><code class="language-java">ActorSystem system = ActorSystem.create();
+Materializer materializer = ActorMaterializer.create(system);
+
+runnable.run(materializer);</code></pre></section><section>
+<pre class="prettyprint"><code class="language-scala">val source = Source(0 to 20000000)</code></pre>
+<pre class="prettyprint"><code class="language-scala">val flow = Flow[Int].map(_.toString())</code></pre>
+<pre class="prettyprint"><code class="language-scala">val sink = Sink.foreach[String](println(_))</code></pre>
+<pre class="prettyprint fragment"><code class="language-scala">val runnable = source.via(flow).to(sink)</code></pre>
+<pre class="prettyprint fragment"><code class="language-scala">implicit val system = ActorSystem()
+implicit val mat = ActorMaterializer()
+
+runnable.run()</code></pre></section><section>
+<p>Java:</p>
+<pre class="prettyprint"><code class="language-java">Source.range(0, 20000000)
+  .map(Object::toString)
+  .runForeach(str -&gt; System.out.println(str), materializer);</code></pre>
+<p>Scala:</p>
+<pre class="prettyprint"><code class="language-scala">Source(0 to 20000000)
+  .map(_.toString)
+  .runForeach(println)</code></pre>
+<p><aside class="notes">we really try to make the API really easy to use for Java and Scala</aside></p></section><section>
+<h2><a href="#materialization" name="materialization" class="anchor"><span class="anchor-link"></span></a>Materialization</h2>
+<pre class="prettyprint group-java"><code class="language-java">RunnableGraph&lt;NotUsed&gt; graph = Source.range(0, 20000000)
+  .map(Object::toString)
+  .to(Sink.foreach(str -&gt; System.out.println(str)));
+
+ActorSystem system = ActorSystem.create();
+Materializer materializer = ActorMaterializer.create(system);
+
+NotUsed n1 = graph.run(materializer);
+NotUsed n2 = graph.run(materializer);</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">val graph = Source(0 to 20000000)
+  .map(_.toString)
+  .to(Sink.foreach(println))
+
+implicit val system = ActorSystem()
+implicit val materializer = ActorMaterializer()
+
+val n1: NotUsed = graph.run()
+val n2: NotUsed = graph.run()</code></pre>
+<p><aside class="notes">running = 2-stage: build graph, run graph. run = materialization. Same graph can be materialized multiple times.</aside></p></section><section><section>
+<h2><a href="#materialized-values" name="materialized-values" class="anchor"><span class="anchor-link"></span></a>Materialized values</h2>
+<pre class="prettyprint group-java"><code class="language-java">Source&lt;String, ActorRef&gt; source =
+  Source.actorRef(23, OverflowStrategy.dropNew());
+
+Sink&lt;String, CompletionStage&lt;String&gt;&gt; sink =
+  Sink.reduce((l, r) -&gt; l + r);
+
+ActorRef actor = source.to(sink).run(materializer);
+actor.tell(&quot;Message&quot;, ActorRef.noSender());</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">val source: Source[String, ActorRef]  =
+  Source.actorRef(bufferSize = 23, OverflowStrategy.dropNew)
+
+val sink: Sink[String, Future[String]] =
+  Sink.reduce(_ + _)
+
+val actor: ActorRef = source.to(sink).run()
+actor ! &quot;Message&quot;</code></pre>
+<p></p></section><section>
+<h2><a href="#materialized-values" name="materialized-values" class="anchor"><span class="anchor-link"></span></a>Materialized values</h2>
+<pre class="prettyprint group-java"><code class="language-java">Source&lt;String, ActorRef&gt; source =
+  Source.actorRef(23, OverflowStrategy.dropNew());
+
+Sink&lt;String, CompletionStage&lt;String&gt;&gt; sink =
+  Sink.reduce((l, r) -&gt; l + r);
+
+RunnableGraph&lt;ActorRef&gt; graph1 =
+  source.to(sink);
+
+RunnableGraph&lt;CompletionStage&lt;String&gt;&gt; graph2 =
+  source.toMat(sink, Keep.right());
+
+RunnableGraph&lt;Pair&lt;ActorRef, CompletionStage&lt;String&gt;&gt;&gt; graph3 =
+  source.toMat(sink, Keep.both());</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">val source: Source[String, ActorRef] =
+ Source.actorRef(bufferSize = 23, OverflowStrategy.dropNew)
+
+val sink: Sink[String, Future[String]] =
+ Sink.reduce(_ + _)
+
+val graph1: RunnableGraph[ActorRef] =
+ source.to(sink)
+
+val graph2: RunnableGraph[Future[String]] =
+ source.toMat(sink)(Keep.right)
+
+val graph3: RunnableGraph[(ActorRef, Future[String])] =
+ source.toMat(sink)(Keep.both)</code></pre>
+<p></p></section></section><section><section>
+<h2><a href="#actor-materialization" name="actor-materialization" class="anchor"><span class="anchor-link"></span></a>Actor materialization</h2>
+<pre class="prettyprint group-java"><code class="language-java">Source.range(1, 3)
+  .map(x -&gt; x + 1)
+  .map(x -&gt; x * 2)
+  .to(Sink.reduce((x, y) -&gt; x + y));</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">Source(1 to 3)
+  .map(x =&gt; x + 1)
+  .map(x =&gt; x * 2)
+  .to(Sink.reduce[Int](_ + _))</code></pre>
+<p><img src="images/stream-unfused.svg" alt="Source, Flow and Sink" /></p>
+<p><aside class="notes">Advantage of 2-phase: reusable building blocks, but opportunity for optimizations at materialization time</aside></p></section><section>
+<h1><a href="#fusing" name="fusing" class="anchor"><span class="anchor-link"></span></a>Fusing</h1>
+<pre class="prettyprint group-java"><code class="language-java">Source.range(1, 3)
+  .map(x -&gt; x + 1).async()
+  .map(x -&gt; x * 2)
+  .to(Sink.reduce((x, y) -&gt; x + y));</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">Source(1 to 3)
+  .map(x =&gt; x + 1).async
+  .map(x =&gt; x * 2)
+  .to(Sink.reduce[Int](_ + _))</code></pre>
+<p><img src="images/stream-async.svg" alt="Source, Flow and Sink" /></p></section><section>
+<h1><a href="#fusing" name="fusing" class="anchor"><span class="anchor-link"></span></a>Fusing</h1>
+<pre class="prettyprint group-java"><code class="language-java">Source.range(1, 3)
+  .map(x -&gt; x + 1)
+  .mapAsync(5, n -&gt; CompletableFuture.completedFuture(n * 2))
+  .to(Sink.reduce((x, y) -&gt; x + y));</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">Source(1 to 3)
+  .map(x =&gt; x + 1)
+  .mapAsync(5)(n =&gt; Future.successful(n * 2))
+  .to(Sink.reduce[Int](_ + _))</code></pre>
+<p><img src="images/stream-async.svg" alt="Source, Flow and Sink" /></p></section></section><section><section>
+<h2><a href="#backpressure-propagation" name="backpressure-propagation" class="anchor"><span class="anchor-link"></span></a>Backpressure propagation</h2>
+<p>Demand is signalled across async boundaries</p>
+<p><img src="images/backpressure-propagation.svg" alt="Backpressure across async boundary" /></p></section><section>
+<h2><a href="#backpressure-propagation" name="backpressure-propagation" class="anchor"><span class="anchor-link"></span></a>Backpressure propagation</h2>
+<p>Thanks to Reactive Streams, across different libraries:</p>
+<p><img src="images/backpressure-propagation-across-libs.svg" alt="Backpressure across async boundary" /></p></section><section>
+<h2><a href="#backpressure-propagation" name="backpressure-propagation" class="anchor"><span class="anchor-link"></span></a>Backpressure propagation</h2>
+<p>Often also possible across external protocols, i.e. TCP:</p>
+<p><img src="images/tcp-window-initial.png" alt="TCP window" /></p>
+<p><span class="fragment"><img src="images/tcp-window-1.png" alt="TCP window" /></span></p></section><section>
+<h2><a href="#backpressure-propagation" name="backpressure-propagation" class="anchor"><span class="anchor-link"></span></a>Backpressure propagation</h2>
+<p>Can be seen in e.g. wireshark:</p>
+<p><img src="images/wireshark-fullwindow-2.png" alt="Wireshark backpressure" /></p>
+<p><aside class="notes">and keeps heartbeating</aside></p></section></section><section>
+<h2><a href="#live-demo-time-" name="live-demo-time-" class="anchor"><span class="anchor-link"></span></a>Live demo time!</h2>
+<p><aside class="notes">TCP server from scratch, throttling and backpressure demo, with netcat and showing the send/recv queues in ss</aside></p></section><section>
+<h2><a href="#weve-only-just-begun" name="weve-only-just-begun" class="anchor"><span class="anchor-link"></span></a>We&rsquo;ve only just begun&hellip;</h2>
+<p><img src="images/compose_graph.png" alt="more complicated graphs" /></p>
+<p><aside class="notes">Only scratched the surface, many combinators to create complex graphs, custom shapes, fan in/out, materialization. Not important to show backpressure though.</aside></p></section><section>
+<h1><a href="#3-akka-http" name="3-akka-http" class="anchor"><span class="anchor-link"></span></a>3. Akka HTTP</h1>
+<p><aside class="notes">So far: might seem lowlevel, but usable to build higher-level abstractions, i.e. Akka HTTP. Will show some of the API, highlighting how Akka streams is the foundation<br>Time: 12:20-12:35</aside></p></section><section>
+<h2><a href="#binding" name="binding" class="anchor"><span class="anchor-link"></span></a>Binding</h2>
+<pre class="prettyprint group-java"><code class="language-java">ActorSystem system = ActorSystem.create();
+Http http = Http.get(system);</code></pre>
+<pre class="prettyprint group-java fragment"><code class="language-java">Source&lt;IncomingConnection, CompletionStage&lt;ServerBinding&gt;&gt; bind =
+  http.bind(ConnectHttp.toHost(&quot;localhost&quot;, 0));</code></pre>
+<pre class="prettyprint group-java fragment"><code class="language-java">Materializer materializer = ActorMaterializer.create(system);
+
+CompletionStage&lt;ServerBinding&gt; bound = bind
+  .to(Sink.foreach(c -&gt; out.println(&quot;Got HTTP connection!&quot;)))
+  .run(materializer);</code></pre>
+<pre class="prettyprint group-java fragment"><code class="language-java">bound.thenAccept(b -&gt;
+  out.println(&quot;Bound on &quot; + b.localAddress()));</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">implicit val system = ActorSystem()
+val http = Http()</code></pre>
+<pre class="prettyprint group-scala fragment"><code class="language-scala">val binding: Source[IncomingConnection, Future[ServerBinding]] =
+  http.bind(&quot;localhost&quot;, port = 0)</code></pre>
+<pre class="prettyprint group-scala fragment"><code class="language-scala">implicit val materializer = ActorMaterializer()
+
+val bound: Future[ServerBinding] = binding
+  .to(Sink.foreach(c =&gt; println(s&quot;Got HTTP connection!&quot;)))
+  .run()</code></pre>
+<pre class="prettyprint group-scala fragment"><code class="language-scala">bound.foreach(b =&gt;
+  println(&quot;Bound on &quot; + b.localAddress))</code></pre></section><section>
+<h2><a href="#connection" name="connection" class="anchor"><span class="anchor-link"></span></a>Connection</h2>
+<p>Is a <code>Flow[Response, Request, _]</code>:</p>
+<pre class="prettyprint group-java"><code class="language-java">Flow&lt;HttpResponse, HttpRequest, NotUsed&gt; flow =
+  connection.flow();
+
+// Materialize and run it yourself</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">val flow: Flow[HttpResponse, HttpRequest, NotUsed] =
+  connection.flow
+
+// Materialize and run it yourself</code></pre>
+<p><span class="fragment">Or provide your <code>Flow[Request, Response, _]</code>:</span></p>
+<pre class="prettyprint group-java fragment"><code class="language-java">// Construct your flow:
+Flow&lt;HttpRequest, HttpResponse, NotUsed&gt; flow = myflow;
+
+// Use it to handle the connection:
+connection.handleWith(flow, materializer);</code></pre>
+<pre class="prettyprint group-scala fragment"><code class="language-scala">// Construct your flow:
+val flow: Flow[HttpRequest, HttpResponse, NotUsed] = myflow
+
+// Use it to handle the connection:
+connection.handleWith(flow)</code></pre></section><section>
+<h2><a href="#http-bindandhandle-" name="http-bindandhandle-" class="anchor"><span class="anchor-link"></span></a>http.bindAndHandle()</h2>
+<pre class="prettyprint group-java"><code class="language-java">// Construct your flow:
+Flow&lt;HttpRequest, HttpResponse, NotUsed&gt; flow = myflow;
+
+// Use it to handle connections:
+http.bindAndHandle(
+  flow,
+  ConnectHttp.toHost(&quot;localhost&quot;, 8080),
+  materializer);</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">// Construct your flow:
+val flow: Flow[HttpRequest, HttpResponse, NotUsed] = myflow
+
+// Use it to handle connections:
+http.bindAndHandle(
+  flow,
+  &quot;localhost&quot;,
+  port = 8080)</code></pre>
+<p><aside class="notes">Remember materialization? This is so easy because the Flow is a blueprint that can be materialized many times</aside></p></section><section>
+<h2><a href="#routing-dsl" name="routing-dsl" class="anchor"><span class="anchor-link"></span></a>Routing DSL</h2>
+<pre class="prettyprint group-java"><code class="language-java">Route route = path(&quot;hello&quot;, () -&gt;
+  get(() -&gt;
+    complete(&quot;Hello, world!&quot;)
+  )
+);</code></pre>
+<pre class="prettyprint group-java fragment"><code class="language-java">Flow&lt;HttpRequest, HttpResponse, NotUsed&gt; flow =
+  route.flow(system, materializer);</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">val route: Route = path(&quot;hello&quot;) {
+  get {
+    complete(&quot;Hello, world!&quot;)
+  }
+}</code></pre>
+<pre class="prettyprint group-scala fragment"><code class="language-scala">// RouteResult.route2HandlerFlow(route)
+val flow2: Flow[HttpRequest, HttpResponse, NotUsed] = route</code></pre></section><section><section>
+<h2><a href="#example-numbers" name="example-numbers" class="anchor"><span class="anchor-link"></span></a>Example: numbers</h2>
+<p><aside class="notes">Wrap an Akka HTTP application around the numbers demo from the Akka Streams section</aside></p></section><section>
+<h2><a href="#path-matching" name="path-matching" class="anchor"><span class="anchor-link"></span></a>Path matching</h2>
+<pre class="prettyprint group-java"><code class="language-java">Route route = path(&quot;hello&quot;, () -&gt;
+  get(() -&gt;
+    complete(&quot;Hello, world!&quot;)
+  )
+);</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">val route: Route = path(&quot;hello&quot;) {
+  get {
+    complete(&quot;Hello, world!&quot;)
+  }
+}</code></pre>
+<pre class="prettyprint group-java fragment"><code class="language-java">Route path(String segment, Supplier&lt;Route&gt; inner) {</code></pre>
+<pre class="prettyprint group-java fragment"><code class="language-java">         Route path(PathMatcher0 p, Supplier&lt;Route&gt; inner) {
+     &lt;T&gt; Route path(PathMatcher1&lt;T&gt; p, Function&lt;T, Route&gt; inner) {
+&lt;T1, T2&gt; Route path(PathMatcher2&lt;T1, T2&gt; p, BiFunction&lt;T1, T2, Route&gt; inner) {</code></pre>
+<pre class="prettyprint group-scala fragment"><code class="language-scala">def path[L](pm: PathMatcher[L]): Directive[L]</code></pre>
+<pre class="prettyprint group-scala fragment"><code class="language-scala">abstract class PathMatcher[L: Tuple]
+type PathMatcher0 = PathMatcher[Unit]
+type PathMatcher1[T] = PathMatcher[Tuple1[T]]
+type PathMatcher2[T,U] = PathMatcher[Tuple2[T,U]]
+// .. etc</code></pre></section><section>
+<pre class="prettyprint group-java"><code class="language-java">         Route path(PathMatcher0 p, Supplier&lt;Route&gt; inner) {
+     &lt;T&gt; Route path(PathMatcher1&lt;T&gt; p, Function&lt;T, Route&gt; inner) {
+&lt;T1, T2&gt; Route path(PathMatcher2&lt;T1, T2&gt; p, BiFunction&lt;T1, T2, Route&gt; inner) {</code></pre>
+<pre class="prettyprint group-java"><code class="language-java">Route route = path(PathMatchers.segment(&quot;hello&quot;), () -&gt;
+  complete(&quot;Hello, World!&quot;));</code></pre>
+<pre class="prettyprint group-java fragment"><code class="language-java">Route route = path(segment(&quot;hello&quot;), () -&gt;
+  complete(&quot;Hello, World!&quot;));</code></pre>
+<pre class="prettyprint group-java fragment"><code class="language-java">Route route = path(segment(&quot;hello&quot;).slash(segment()), name -&gt;
+  complete(&quot;Hello, &quot; + name + &quot;!&quot;));</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">abstract class PathMatcher[L: Tuple]
+type PathMatcher0 = PathMatcher[Unit]
+type PathMatcher1[T] = PathMatcher[Tuple1[T]]
+type PathMatcher2[T,U] = PathMatcher[Tuple2[T,U]]
+// .. etc</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">val route = path(&quot;hello&quot;) {
+  complete(&quot;Hello, World!&quot;)
+}</code></pre>
+<pre class="prettyprint group-scala fragment"><code class="language-scala">val route = path(&quot;hello&quot; / Segment) { name =&gt;
+  complete(&quot;Hello, &quot; + name + &quot;!&quot;)
+}</code></pre></section><section>
+<pre class="prettyprint group-java"><code class="language-java">PathMatcher1&lt;Integer&gt; m =
+  PathMatchers
+    .segment(&quot;foo&quot;)
+    .slash(&quot;bar&quot;)
+    .slash(
+      segment(&quot;X&quot;).concat(integerSegment())
+    )
+    .slash(
+      segment(&quot;edit&quot;).orElse(segment(&quot;create&quot;))
+    );</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">val matcher: PathMatcher1[Option[Int]] =
+  &quot;foo&quot; / &quot;bar&quot; / &quot;X&quot; ~ IntNumber.? / (&quot;edit&quot; | &quot;create&quot;)</code></pre>
+<p>This will match paths like <code>foo/bar/X42/edit</code> or <code>foo/bar/X37/create</code>.</p>
+<p><aside class="notes">Possible stretch topics here: Path concatenation/Nested routes, error handling</aside></p></section></section><section>
+<h2><a href="#other-akka-http-features" name="other-akka-http-features" class="anchor"><span class="anchor-link"></span></a>Other Akka HTTP features</h2>
+<p>Client API</p>
+<p><span class="fragment">Server-side HTTP/2</span></p>
+<p><span class="fragment">Marshalling API</span></p>
+<p><span class="fragment">Content negotiation</span></p></section><section>
+<p><img src="images/play.svg" alt="play" /></p>
+<p><img src="images/lagom.svg" alt="lagom" /></p>
+<p><aside class="notes">Conclusion: Akka and Akka Streams foundation, leveraged by Akka HTTP and other libraries</aside></p></section><section>
+<h1><a href="#4-demo" name="4-demo" class="anchor"><span class="anchor-link"></span></a>4. Demo</h1>
+<p><aside class="notes">Time: 12:30-12:45</aside></p></section><section>
+<h2><a href="#challenge" name="challenge" class="anchor"><span class="anchor-link"></span></a>Challenge</h2>
+<ul>
+  <li>HTTP front-end</li>
+  <li>FTP back-end</li>
+</ul></section><section data-background="images/alpakka.jpg">
+<h1><a href="#" name="" class="anchor"><span class="anchor-link"></span></a><span class="orange">Alpakka</span></h1></section><section>
+<h2><a href="#alpakka" name="alpakka" class="anchor"><span class="anchor-link"></span></a>Alpakka</h2>
+<p>Community for Akka Streams connectors</p>
+<p><span class="fragment"><a href="https://github.com/akka/alpakka">https://github.com/akka/alpakka</a></span></p>
+<p><aside class="notes">A bit like Apache Camel, but for Akka Streams</aside></p></section><section>
+<p><img src="images/alpakka/collection.svg" alt="alpakka logo collection" /></p></section><section>
+<h2><a href="#ftp-client" name="ftp-client" class="anchor"><span class="anchor-link"></span></a>FTP client</h2>
+<p><aside class="notes">Start of live demo: fetch directory contents from FTP. (Could also move to end of Akka Streams section.)</aside></p></section><section>
+<h2><a href="#exposed-via-http" name="exposed-via-http" class="anchor"><span class="anchor-link"></span></a>Exposed via HTTP</h2><aside class="notes">
+<p>Naive implementation with <code>Sink.reduce(_ + _)</code>.</p>
+<p>Interaction moment: who spotted the security issue?</p></aside></section><section><section>
+<h2><a href="#lets-put-some-load-on-it-" name="lets-put-some-load-on-it-" class="anchor"><span class="anchor-link"></span></a>Let&rsquo;s put some load on it!</h2>
+<p><img src="images/Gatling-logo.png" alt="Gatling logo" /></p></section><section>
+<p><img src="images/visualvm_overloaded.png" alt="VisualVM overloaded" /></p></section><section>
+<p><img src="images/gatling_overloaded.png" alt="Gatling report overloaded" /></p></section><section>
+<p><img src="images/gatling_overloaded2.png" alt="Gatling report overloaded 2" /></p></section></section><section>
+<h2><a href="#stream-the-entity" name="stream-the-entity" class="anchor"><span class="anchor-link"></span></a>Stream the entity</h2>
+<p>Avoid:</p>
+<pre class="prettyprint group-java"><code class="language-java">Source&lt;ByteString, CompletionStage&lt;IOResult&gt;&gt; source =
+  Ftp.fromPath(filename, ftpSettings);
+
+CompletionStage&lt;ByteString&gt; result =
+  source.toMat(Sink.reduce(ByteString::concat), Keep.right()).run(materializer);
+
+return onSuccess(() -&gt; result, bytes -&gt; complete(HttpEntities.create(bytes)));</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">val route = path(&quot;file&quot; / Segment) { filename =&gt; {
+  val source = Ftp.fromPath(filename, ftpSettings)
+  val result = source.toMat(Sink.reduce[ByteString](_ ++ _))(Keep.right).run()
+  complete(result)
+}}</code></pre>
+<p>But use:</p>
+<pre class="prettyprint group-java"><code class="language-java">Source&lt;ByteString, CompletionStage&lt;IOResult&gt;&gt; source =
+  Ftp.fromPath(filename, ftpSettings);
+
+HttpEntity.CloseDelimited entity =
+  HttpEntities.createCloseDelimited(
+    ContentTypes.APPLICATION_OCTET_STREAM,
+    source
+  );
+
+return complete(HttpResponse.create().withEntity(entity));</code></pre>
+<pre class="prettyprint group-scala"><code class="language-scala">val route = path(&quot;file&quot; / Segment) { filename =&gt; {
+  val source = Ftp.fromPath(filename, ftpSettings)
+
+  complete(HttpEntity.Chunked(
+    ContentTypes.`application/octet-stream`,
+    source.map(bytes ⇒ ChunkStreamPart(bytes))))
+}}</code></pre></section><section><section>
+<h2><a href="#lets-go-again-" name="lets-go-again-" class="anchor"><span class="anchor-link"></span></a>Let&rsquo;s go again!</h2>
+<p><img src="images/Gatling-logo.png" alt="Gatling logo" /></p></section><section>
+<p><img src="images/visualvm_ok.png" alt="VisualVM ok" /></p>
+<p><aside class="notes">Check the scale! Fairly healthy, though gc churns</aside></p></section><section>
+<p><img src="images/gatling_ok.png" alt="Gatling OK" /></p></section><section>
+<p><img src="images/gatling_ok2.png" alt="Gatling OK 2" /></p></section></section><section><section>
+<h2><a href="#with-room-to-spare" name="with-room-to-spare" class="anchor"><span class="anchor-link"></span></a>With room to spare</h2>
+<p><img src="images/visualvm_pushed.png" alt="VisualVM pushed" /></p></section><section>
+<p><img src="images/gatling_pushed.png" alt="Gatling pushed" /></p></section><section>
+<p><img src="images/gatling_pushed2.png" alt="Gatling pushed 2" /></p></section></section><section>
+<h1><a href="#re-cap" name="re-cap" class="anchor"><span class="anchor-link"></span></a>Re-cap</h1>
+<p>Backpressure prevents overload</p>
+<p><span class="fragment">Reactive Streams for integration</span></p>
+<p><span class="fragment">e.g. Akka Streams to implement</span></p>
+<p><span class="fragment">e.g. Akka HTTP to leverage</span></p>
+<p><aside class="notes">Backpressure protects against overloading the target of an asynchronous non-blocking stream. Reactive Streams makes this work end-to-end, use a library like Akka Streams, Akka HTTP is built on top of Akka Streams and benefits from it.</aside></p></section><section>
+<h2><a href="#happy-hakking-" name="happy-hakking-" class="anchor"><span class="anchor-link"></span></a>Happy hAkking!</h2>
+<dl>
+  <dt>Slides &amp; Code
+  </dt>
+  <dd><a href="https://github.com/raboof/akka-http-backpressure">github.com/raboof/akka-http-backpressure</a></dd>
+  <dt>Docs &amp; QuickStarts
+  </dt>
+  <dd><a href="https://akka.io">akka.io</a>, <a href="https://developer.lightbend.com/start">developer.lightbend.com/start</a></dd>
+  <dt>Community</dt>
+  <dd><a href="https://gitter.im/akka/akka">gitter.im/akka/akka</a></dd>
+  <dt>Tweet</dt>
+  <dd><a href="https://twitter.com/akkateam">@akkateam</a>, <a href="https://twitter.com/raboofje">@raboofje</a></dd>
+</dl>
+<p><aside class="notes">And talk to me afterwards :). Time: 12:45-12:55</aside></p></section>
+<p><span id="selectedLanguage">scala</span></p>
+<script>
+  const selectedLanguage = document.getElementById('selectedLanguage').innerHTML.toLowerCase()
+  const hiddenLanguage = (selectedLanguage == "java") ? "scala" : "java"
+
+  console.log(selectedLanguage)
+  var javaFragments = document.getElementsByClassName('group-' + hiddenLanguage)
+  while (javaFragments.length > 0) {
+    javaFragments[0].remove()
+  }
+</script>
+</div>
+</div>
+
+<script src="lib/js/head.min.js"></script>
+<script src="js/reveal.js"></script>
+
+<script>
+// More info about config & dependencies:
+// - https://github.com/hakimel/reveal.js#configuration
+// - https://github.com/hakimel/reveal.js#dependencies
+Reveal.initialize({
+history: true,
+slideNumber: true,
+dependencies: [
+{ src: 'plugin/markdown/marked.js' },
+{ src: 'plugin/markdown/markdown.js' },
+{ src: 'plugin/notes/notes.js', async: true },
+{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+]
+});
+</script>
+<div class="footer" style="position: absolute; width: 100%; bottom: 0px; padding: 1.2em; background-image: url(lightbend-reverse.svg); height: 3em; background-color: #15a9ce; background-repeat: no-repeat; background-origin: content-box"></div>
+</body>
+</html>
